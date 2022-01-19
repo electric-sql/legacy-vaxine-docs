@@ -5,7 +5,7 @@ This repo contains the source code for the [Vaxine](https://vaxine.io) documenta
 
 Pages are written in Markdown. You are welcome to fork and [raise a Pull Request](https://github.com/vaxine-io/docs/compare) to contribute or provide fixes.
 
-## Status -- Pre-alpha
+## Status &mdash; Pre-alpha
 
 This repo is currently work-in-progress and the docs are not ready to follow yet.
 
