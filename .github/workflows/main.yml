@@ -15,6 +15,6 @@ jobs:
     steps:
     - uses: actions/checkout@master
     - name: curl
-      uses: enflo/curl-action@master
+      uses: vaxine-io/curl-action@master
       with:
         curl: "-X POST -d {} ${{ secrets.WebsiteTriggerDeployBuildHook }}"
