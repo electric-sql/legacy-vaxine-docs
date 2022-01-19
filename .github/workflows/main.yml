@@ -16,7 +16,5 @@ jobs:
     - uses: actions/checkout@master
     - name: curl
       uses: enflo/curl-action@master
-      env:
-        BUILD_HOOK_URL: ${{ secrets.WebsiteTriggerDeployBuildHook }}
       with:
-        curl: "-X POST -d {} $BUILD_HOOK_URL"
+        curl: "-X POST -d {} ${{ secrets.WebsiteTriggerDeployBuildHook }}"
