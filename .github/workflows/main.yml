@@ -1,0 +1,22 @@
+name: trigger-website-deploy
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  curl:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    - name: curl
+      uses: enflo/curl-action@master
+      env:
+        BUILD_HOOK_URL: ${{ secrets.WebsiteTriggerDeployBuildHook }}
+      with:
+        curl: "-X POST -d {} $BUILD_HOOK_URL"
