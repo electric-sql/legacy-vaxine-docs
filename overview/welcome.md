@@ -9,4 +9,4 @@ redirect_from:
 
 # Vaxine Documentation
 
-We haven't made this page yet. Please check back again soon!
+We haven't made this page yet. Check back soon.
