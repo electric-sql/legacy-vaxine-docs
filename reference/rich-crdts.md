@@ -1,8 +1,8 @@
 ---
 layout: docs
-title: Generators
+title: Rich-CRDTs
 ---
 
-# Generators
+# Rich-CRDTs
 
 We haven't made this page yet. Check back soon.

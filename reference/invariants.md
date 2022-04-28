@@ -1,8 +1,8 @@
 ---
 layout: docs
-title: Quickstart
+title: Invariants
 ---
 
-# Quickstart
+# Invariants
 
 We haven't made this page yet. Check back soon.

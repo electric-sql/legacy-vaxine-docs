@@ -1,8 +1,9 @@
 ---
 layout: docs
-title: Vax Library
+title: Anomalies
+redirect_from: /docs/reference
 ---
 
-# Vax
+# Anomalies
 
 We haven't made this page yet. Check back soon.
