@@ -22,8 +22,10 @@ For these reasons, strong consistency is not suitable. Async operation execution
 The following table summarises the anomalies that occur with different database technologies and illustrates how Rich-CRDTs with TCC+ both avoids aborts and flickering that are common with CP systems and prevents a range of anomalies possible under pure CRDT and OT systems:
 
 <figure class="figure mt-2">
-  <a href="{% asset 'docs/reference/summary-table.png' @path %}" class="no-visual">
-    {% asset 'docs/reference/summary-table.png' class="figure-img img-fluid" %}
+  <a href="../_assets/images/reference/summary-table.png" class="no-visual">
+    <img src="../_assets/images/reference/summary-table.png"
+        class="figure-img img-fluid"
+    />
   </a>
   <figcaption class="figure-caption text-end">
     Summary table of anomalies solved by different database technologies.
@@ -43,8 +45,11 @@ The following table summarises the anomalies that occur with different database 
 **Solution**:<br />Transactional Causal Consistency+, the strongest consistency model under High Availability, which prevents reordering of causal-related operations.
 
 <figure class="figure mt-2">
-  <a href="{% asset 'docs/reference/causality-violation.gif' @path %}" class="no-visual">
-    {% asset 'docs/reference/causality-violation.gif' class="figure-img img-fluid" %}
+  <a href="../_assets/images/reference/causality-violation.gif"
+      class="no-visual">
+    <img src="../_assets/images/reference/causality-violation.gif"
+        class="figure-img img-fluid"
+    />
   </a>
   <figcaption class="figure-caption text-end">
     Illustration of a causality violation anomaly.
@@ -62,8 +67,11 @@ The following table summarises the anomalies that occur with different database 
 **Solution**:<br />develop data-types that have more complex internal representation of the data they are used to represent. Vaxine provides off the shelf rich data-types tailored for specific use cases, like collaborative text edition and other productivity tools.
 
 <figure class="figure mt-2">
-  <a href="{% asset 'docs/reference/user-intent.gif' @path %}" class="no-visual">
-    {% asset 'docs/reference/user-intent.gif' class="figure-img img-fluid" %}
+  <a href="../_assets/images/reference/user-intent.gif"
+      class="no-visual">
+    <img src="../_assets/images/reference/user-intent.gif"
+        class="figure-img img-fluid"
+    />
   </a>
   <figcaption class="figure-caption text-end">
     Illustration of a user-intent preservation anomaly.
@@ -87,8 +95,11 @@ The following table summarises the anomalies that occur with different database 
 **Example**:<br />Two users set the color of the same object concurrently. They apply the change immediately in the local state and send the update to the server. A server receives the first update and propagates it to all all users. The clients receiving the update from the server apply it, possibly overwriting the color set locally. When the second operation arrives at the server, conflict resolution might chose this operation as the winner and propagate it to clients. This will result in flickering effect for the users that already applied the first update.
 
 <figure class="figure mt-2">
-  <a href="{% asset 'docs/reference/flickering.gif' @path %}" class="no-visual">
-    {% asset 'docs/reference/flickering.gif' class="figure-img img-fluid" %}
+  <a href="../_assets/images/reference/flickering.gif"
+      class="no-visual">
+    <img src="../_assets/images/reference/flickering.gif"
+        class="figure-img img-fluid"
+    />
   </a>
   <figcaption class="figure-caption text-end">
     Illustration of a flickering anomaly.
@@ -114,8 +125,11 @@ The following table summarises the anomalies that occur with different database 
 **Solution**:<br />Vaxine prevents referential integrity violation through reservations or compensations.
 
 <figure class="figure mt-2">
-  <a href="{% asset 'docs/reference/referential-integrity-v1.gif' @path %}" class="no-visual">
-    {% asset 'docs/reference/referential-integrity-v1.gif' class="figure-img img-fluid" %}
+  <a href="../_assets/images/reference/referential-integrity-v1.gif"
+      class="no-visual">
+    <img src="../_assets/images/reference/referential-integrity-v1.gif"
+        class="figure-img img-fluid"
+    />
   </a>
   <figcaption class="figure-caption text-end">
     Illustration of a referential integrity anomaly.
