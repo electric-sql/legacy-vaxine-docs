@@ -80,11 +80,11 @@ The following table summarises the anomalies that occur with different database 
 
 ## Cumulative effects
 
-**Problem**:<br />cumulating the effects of individual operation might result in amplification of the intended changes. This is a particular case of not failing to preserve user intent.
+**Problem**:<br />cumulating the effects of individual operation might result in amplification of the intended changes. This is a particular case of failing to preserve user intention.
 
 **Example**:<br />two users modify some object’s property concurrently, for example enlarging a shape, and the semantics of the merge is to sum the deltas. The shape size will end larger than each user intended. When trying to correct the issue, the reverse situation might happen again.
 
-**Mitigation**:<br />Cumulative effects are acceptable when latency low enough that users perceive that there are concurrent modifications to the same object.
+**Mitigation**:<br />Cumulative effects are acceptable when latency is low enough that users perceive that there are concurrent modifications to the same object.
 
 **Solution**:<br />Prevent multiple users from modifying the same property of an object concurrently.
 
@@ -116,18 +116,12 @@ The following table summarises the anomalies that occur with different database 
 
 **Problem**:<br />Concurrent operation might inadvertently destroy the target in one side of a relationship and the inconsistency is not detected until the element is dereferenced.
 
-**Example**:<br />In a RPG, a user equips an item and concurrently sells it. User might receive the coin of the sell but the item remains equipped while no longer existing in the inventory. It is possible to do an integrity check to see if the equipped items all exist in the inventory, but counting the coin would require keeping the log of all transactions indefinitely.
-
-**Example**:<br />A referential integrity constraint might be broken by concurrent operations, e.g., an entity is made child of another, but the parent entity is removed. This issue might be undetected until a transaction tries access the referenced entity.
-
-**Mitigation**:<br />no mitigation.
-
-**Solution**:<br />Vaxine prevents referential integrity violation through reservations or compensations.
+**Example**:<br />In a Kanban board, a user moves a card into a column and concurrently another user removes that column. After merging the changes, the card that was moved has no assigned column and can possibly be lost.
 
 <figure class="figure mt-2">
-  <a href="../_assets/images/reference/referential-integrity-v1.gif"
+  <a href="../_assets/images/reference/referential-integrity-cards.gif"
       class="no-visual">
-    <img src="../_assets/images/reference/referential-integrity-v1.gif"
+    <img src="../_assets/images/reference/referential-integrity-cards.gif"
         class="figure-img img-fluid"
     />
   </a>
@@ -135,6 +129,24 @@ The following table summarises the anomalies that occur with different database 
     Illustration of a referential integrity anomaly.
   </figcaption>
 </figure>
+
+**Example**:<br />In a role playing game ("RPG"), a user equips an item and concurrently sells it. The user may receive the proceeds of the sale while the item remains equipped but no longer exists in the inventory. It is possible to do an integrity check to unequip the item, but the developer has to provide the code for that.
+
+<figure class="figure mt-2">
+  <a href="../_assets/images/reference/referential-integrity-sale.gif"
+      class="no-visual">
+    <img src="../_assets/images/reference/referential-integrity-sale.gif"
+        class="figure-img img-fluid"
+    />
+  </a>
+  <figcaption class="figure-caption text-end">
+    Illustration of a referential integrity anomaly.
+  </figcaption>
+</figure>
+
+**Mitigation**:<br />Use a stronger consistency model that ensures sequential operation execution.
+
+**Solution**:<br />Vaxine prevents referential integrity violation through reservations and/or compensations.
 
 ## Ownership clash
 
