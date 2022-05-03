@@ -1,8 +1,8 @@
 ---
 layout: docs
-title: Quickstart
+title: Rich-CRDTs
 ---
 
-# Quickstart
+# Rich-CRDTs
 
 We haven't made this page yet. Check back soon.

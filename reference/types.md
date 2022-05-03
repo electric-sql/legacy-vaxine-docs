@@ -1,7 +1,6 @@
 ---
 layout: docs
-title: Data Types
-redirect_from: /reference
+title: Types
 ---
 
 # Data Types
