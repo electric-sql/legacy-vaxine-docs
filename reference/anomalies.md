@@ -21,6 +21,8 @@ For these reasons, strong consistency is not suitable. Async operation execution
 
 The following table summarises the anomalies that occur with different database technologies and illustrates how Rich-CRDTs with TCC+ both avoids aborts and flickering that are common with CP systems and prevents a range of anomalies possible under pure CRDT and OT systems:
 
+<div class="table-responsive tbody-primary-strongs" markdown="1">
+
 | Anomaly                         | OT             | CRDTs          | TCC+ & Rich-CRDTs | Serializability |
 | ------------------------------- | -------------- | -------------- | ----------------- | --------------- |
 | Causality violation             | Single object  | Single object  | **No**            | **No**          |
@@ -36,6 +38,8 @@ The following table summarises the anomalies that occur with different database 
 | Ghost movements                 | Yes            | Yes            | Yes               | Yes             |
 | Proximity bias                  | Not applicable | Not applicable | Randomised        | Yes             |
 | Offline interactions            | Some           | Offline-first  | Online            | Online          |
+
+</div>
 
 ## Causality violation
 
