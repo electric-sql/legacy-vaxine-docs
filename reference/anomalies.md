@@ -21,16 +21,25 @@ For these reasons, strong consistency is not suitable. Async operation execution
 
 The following table summarises the anomalies that occur with different database technologies and illustrates how Rich-CRDTs with TCC+ both avoids aborts and flickering that are common with CP systems and prevents a range of anomalies possible under pure CRDT and OT systems:
 
-<figure class="figure mt-2">
-  <a href="../_assets/images/reference/summary-table.png" class="no-visual">
-    <img src="../_assets/images/reference/summary-table.png"
-        class="figure-img img-fluid"
-    />
-  </a>
-  <figcaption class="figure-caption text-end">
-    Summary table of anomalies solved by different database technologies.
-  </figcaption>
-</figure>
+<div class="table-responsive tbody-primary-strongs" markdown="1">
+
+| Anomaly                         | OT             | CRDTs          | TCC+ & Rich-CRDTs | Serializability |
+| ------------------------------- | -------------- | -------------- | ----------------- | --------------- |
+| Causality violation             | Single object  | Single object  | **No**            | **No**          |
+| User intention violation        | Some           | Some           | Some              | **No**          |
+| Cumulative effects              | Yes            | Yes            | **No**            | **No**          |
+| Flickering                      | Some           | Some           | **No**            | Yes (aborts)    |
+| Broken referential integrity    | Yes            | Yes            | **No**            | **No**          |
+| Ownership clash                 | Yes            | Yes            | **No**            | **No**          |
+| Long-lived actions interference | Yes            | Yes            | **No**            | **No**          |
+| Duplication of elements         | Yes            | Yes            | **No**            | **No**          |
+| Tree cycles                     | Yes            | Yes            | **No**            | **No**          |
+| Convergence inconsistencies     | Yes            | Yes            | Some              | Not applicable  |
+| Ghost movements                 | Yes            | Yes            | Yes               | Yes             |
+| Proximity bias                  | Not applicable | Not applicable | Randomised        | Yes             |
+| Offline interactions            | Some           | Offline-first  | Online            | Online          |
+
+</div>
 
 ## Causality violation
 
@@ -80,7 +89,7 @@ The following table summarises the anomalies that occur with different database 
 
 ## Cumulative effects
 
-**Problem**:<br />cumulating the effects of individual operation might result in amplification of the intended changes. This is a particular case of failing to preserve user intention.
+**Problem**:<br />Cumulating the effects of individual operation might result in amplification of the intended changes. This is a particular case of failing to preserve user intention.
 
 **Example**:<br />two users modify some object’s property concurrently, for example enlarging a shape, and the semantics of the merge is to sum the deltas. The shape size will end larger than each user intended. When trying to correct the issue, the reverse situation might happen again.
 
@@ -150,7 +159,7 @@ The following table summarises the anomalies that occur with different database 
 
 ## Ownership clash
 
-Problems: Concurrent operations set the value of a field. Arbitration picks a single winning value, but during the fork different replicas allow operations based on the different values set.
+**Problem**:<br />Concurrent operations set the value of a field. Arbitration picks a single winning value, but during the fork different replicas allow operations based on the different values set.
 
 **Example**:<br />two concurrent transactions set different owners for an entity. Divergence is only reconciled asynchronously, meanwhile the (two) owner(s) of the entity executed operations that should only be allowed by a single owner.
 
@@ -186,7 +195,7 @@ Problems: Concurrent operations set the value of a field. Arbitration picks a si
 
 **Example**:<br />Two cut-and-paste operations of the same element result in two copies of that element, violating uniqueness.
 
-**Example**:<br />concurrent reparenting an element in a graph, result in duplication of that element.
+**Example**:<br />Concurrent reparenting an element in a graph results in duplication of that element.
 
 **Mitigation**:<br />Use locking to prevent concurrent operations on a single element.
 
