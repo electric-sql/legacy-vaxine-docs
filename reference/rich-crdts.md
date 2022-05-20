@@ -5,4 +5,4 @@ title: Rich-CRDTs
 
 # Rich-CRDTs
 
-We haven't made this page yet. Check back soon.
+This page is under construction. In the meantime, please see our [introductory post on rich-CRDTs](/blog/2022/05/03/introducing-rich-crdts).
