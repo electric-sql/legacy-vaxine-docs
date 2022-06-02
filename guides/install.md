@@ -14,7 +14,7 @@ See [the Antidote docs on running in Docker](https://antidotedb.gitbook.io/docum
 
 ## Add Vax dependency
 
-Include [Vax](https://github.com/vaxine-io/vax) as a dependency in your Elixir app.
+Include [Vax](https://github.com/vaxine-io/vaxine/apps/vax) as a dependency in your Elixir app.
 
 ## Follow the examples
 
