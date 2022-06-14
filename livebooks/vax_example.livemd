@@ -1,0 +1,444 @@
+<!-- livebook:{"persist_outputs":true} -->
+
+# Vax example
+
+```elixir
+:ok =
+  Mix.install([
+    {:antidote_pb_codec,
+     git: "git@github.com:vaxine-io/vaxine.git", sparse: "apps/antidote_pb_codec", override: true},
+    {:antidotec_pb,
+     git: "git@github.com:vaxine-io/vaxine.git", sparse: "apps/antidotec_pb", override: true},
+    {:vax, git: "git@github.com:vaxine-io/vaxine.git", sparse: "apps/vax"},
+    {:kino, "~> 0.6.0"}
+  ])
+
+defmodule VaxExample.VaxConfig do
+  use Kino.JS
+  use Kino.JS.Live
+  use Kino.SmartCell, name: "Vax config"
+
+  @impl true
+  def init(_attrs, ctx) do
+    {:ok, assign(ctx, hostname: "localhost", port: 8087)}
+  end
+
+  @impl true
+  def handle_connect(ctx) do
+    {:ok, %{hostname: ctx.assigns.hostname, port: ctx.assigns.port}, ctx}
+  end
+
+  @impl true
+  def to_attrs(ctx) do
+    %{"hostname" => ctx.assigns.hostname, "port" => ctx.assigns.port}
+  end
+
+  @impl true
+  def handle_event("set_config", %{"hostname" => hostname, "port" => port}, ctx) do
+    {:noreply, assign(ctx, hostname: hostname, port: String.to_integer(port))}
+  end
+
+  @impl true
+  def to_source(attrs) do
+    quote do
+      :ok =
+        Application.put_env(:vax_example, VaxExample.Repo,
+          hostname: unquote(attrs["hostname"]),
+          port: unquote(attrs["port"]),
+          log: false
+        )
+
+      IO.puts("Set hostname as `#{inspect(unquote(attrs["hostname"]))}`")
+      IO.puts("Set port as `#{unquote(inspect(attrs["port"]))}`")
+    end
+    |> Kino.SmartCell.quoted_to_string()
+  end
+
+  asset "main.js" do
+    """
+    export function init(ctx, payload) {
+      ctx.importCSS("main.css");
+      ctx.importCSS("https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap");
+
+      root.innerHTML = `
+        <div class="app">
+          <label class="label">Hostname:</label>
+          <input class="input" type="text" name="hostname" />
+
+          <label class="label">Port:</label>
+          <input class="input" type="text" name="port" />
+
+          <button class="button" id="set">
+            Set
+          </button>
+        </div>
+      `;
+
+      const buttonEl = ctx.root.querySelector(`[id="set"]`);
+
+      buttonEl.addEventListener("click", (event) => {
+        let hostname = ctx.root.querySelector(`[name="hostname"]`).value;
+        let port = ctx.root.querySelector(`[name="port"]`).value;
+        ctx.pushEvent("set_config", {hostname: hostname, port: port});
+      });
+
+      ctx.handleSync(() => {
+        // Synchronously invokes change listeners
+        document.activeElement &&
+          document.activeElement.dispatchEvent(new Event("change"));
+      });
+    }
+    """
+  end
+
+  asset "main.css" do
+    """
+    .app {
+      font-family: "Inter";
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background-color: #ecf0ff;
+      padding: 8px 16px;
+      border: solid 1px #cad5e0;
+      border-radius: 0.5rem 0.5rem 0 0;
+    }
+
+    .label {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #445668;
+      text-transform: uppercase;
+    }
+
+    .input {
+      padding: 8px 12px;
+      background-color: #f8fafc;
+      font-size: 0.875rem;
+      border: 1px solid #e1e8f0;
+      border-radius: 0.5rem;
+      color: #445668;
+      min-width: 150px;
+    }
+
+    .input:focus {
+      outline: none;
+    }
+
+    .button {
+      appearance: button;
+      backface-visibility: hidden;
+      background-color: #405cf5;
+      border-radius: 6px;
+      border-width: 0;
+      box-shadow: rgba(50, 50, 93, .1) 0 0 0 1px inset,rgba(50, 50, 93, .1) 0 2px 5px 0,rgba(0, 0, 0, .07) 0 1px 1px 0;
+      box-sizing: border-box;
+      color: #fff;
+      cursor: pointer;
+      line-height: 1.15;
+      outline: none;
+      overflow: hidden;
+      padding: 0 25px;
+      position: relative;
+      text-align: center;
+      text-transform: none;
+      transform: translateZ(0);
+      transition: all .2s,box-shadow .08s ease-in;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+      height: 24px;
+    }
+    """
+  end
+end
+
+Kino.SmartCell.register(VaxExample.VaxConfig)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+:ok
+```
+
+## Setting our connection parameters
+
+<!-- livebook:{"attrs":{},"kind":"Elixir.VaxExample.VaxConfig","livebook_object":"smart_cell"} -->
+
+```elixir
+:ok =
+  Application.put_env(:vax_example, VaxExample.Repo,
+    hostname: "localhost",
+    port: 8087,
+    log: false
+  )
+
+IO.puts("Set hostname as `#{inspect("localhost")}`")
+IO.puts("Set port as `#{"8087"}`")
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+Set hostname as `"localhost"`
+Set port as `8087`
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+:ok
+```
+
+## Spinning up a Repo
+
+```elixir
+# Defining the repo
+defmodule VaxExample.Repo do
+  use Ecto.Repo, adapter: Vax.Adapter, otp_app: :vax_example
+end
+
+# Starting the repo
+{:ok, _} = Supervisor.start_link([VaxExample.Repo], strategy: :one_for_one)
+
+# Aliasing it for ease of usage
+alias VaxExample.Repo
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+VaxExample.Repo
+```
+
+<!-- livebook:{"branch_parent_index":1} -->
+
+## Creating a Schema
+
+```elixir
+defmodule VaxExample.Post do
+  use Vax.Schema
+
+  schema "post" do
+    field(:title, :string)
+    field(:content, :string)
+  end
+end
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:module, VaxExample.Post, <<70, 79, 82, 49, 0, 0, 15, ...>>,
+ [__schema__: 1, __schema__: 1, __schema__: 1, __schema__: 1, __schema__: 2, __schema__: 2, ...]}
+```
+
+Now that we have a schema, we can insert some data:
+
+```elixir
+{:ok, post} =
+  Repo.insert(%VaxExample.Post{title: "Hello, world!", content: "This field is a LWW register!"})
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:ok,
+ %VaxExample.Post{
+   __meta__: #Ecto.Schema.Metadata<:loaded, "post">,
+   content: "This field is a LWW register!",
+   id: "d19614f1-2fcf-4265-948c-b34c3d491681",
+   title: "Hello world!"
+ }}
+```
+
+We can update the post
+
+```elixir
+{:ok, post} =
+  post
+  |> Ecto.Changeset.change(%{title: "Hello, universe!"})
+  |> Repo.update()
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:ok,
+ %VaxExample.Post{
+   __meta__: #Ecto.Schema.Metadata<:loaded, "post">,
+   content: "This field is a LWW register!",
+   id: "d19614f1-2fcf-4265-948c-b34c3d491681",
+   title: "Hello, universe!"
+ }}
+```
+
+```elixir
+
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+nil
+```
+
+CRDT types have special update semantics
+
+```elixir
+defmodule VaxExample.PostWithCrdts do
+  use Vax.Schema
+
+  schema "post_with_crdts" do
+    field(:title, :string)
+    field(:content, :string)
+    field(:reactions, Vax.Types.Counter)
+    field(:tags, Vax.Types.Set, type: :string)
+  end
+end
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:module, VaxExample.PostWithCrdts, <<70, 79, 82, 49, 0, 0, 16, ...>>,
+ [__schema__: 1, __schema__: 1, __schema__: 1, __schema__: 1, __schema__: 2, __schema__: 2, ...]}
+```
+
+```elixir
+{:ok, post_base} =
+  %VaxExample.PostWithCrdts{title: "Concurrency safe counter and set", reactions: 2}
+  |> Repo.insert()
+
+{:ok, %{reactions: 5}} =
+  post_base
+  |> Vax.Types.Counter.cast_increment(:reactions, 3)
+  |> Repo.update()
+
+# updating stale, incs get merged
+{:ok, %{reactions: 8}} =
+  post_base
+  |> Ecto.Changeset.cast(%{reactions: 5}, [:reactions])
+  |> Repo.update()
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:ok,
+ %VaxExample.PostWithCrdts{
+   __meta__: #Ecto.Schema.Metadata<:loaded, "post_with_crdts">,
+   content: nil,
+   id: "9f36d962-242f-4334-961e-7e9eb2e52389",
+   reactions: 8,
+   tags: #MapSet<[]>,
+   title: "Concurrency safe counter and set"
+ }}
+```
+
+```elixir
+{:ok, post_base} =
+  %VaxExample.PostWithCrdts{title: "Concurrency safe counter and set"}
+  |> Repo.insert()
+
+expected_tags = MapSet.new(["cool"])
+
+{:ok, %{tags: ^expected_tags}} =
+  post_base
+  |> Ecto.Changeset.change(%{tags: ["cool"]})
+  |> Repo.update()
+
+# updating stale, incs get merged
+expected_tags = MapSet.new(["cool", "new"])
+
+{:ok, %{tags: ^expected_tags} = post_updated} =
+  post_base
+  |> Ecto.Changeset.cast(%{tags: ["new"]}, [:tags])
+  |> Repo.update()
+
+expected_tags = MapSet.new(["cool"])
+
+{:ok, %{tags: ^expected_tags}} =
+  post_updated
+  |> Ecto.Changeset.cast(%{tags: ["cool"]}, [:tags])
+  |> Repo.update()
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:ok,
+ %VaxExample.PostWithCrdts{
+   __meta__: #Ecto.Schema.Metadata<:loaded, "post_with_crdts">,
+   content: nil,
+   id: "3567736d-ea8a-48a3-a38a-0ca81bfc6c14",
+   reactions: 0,
+   tags: #MapSet<["cool"]>,
+   title: "Concurrency safe counter and set"
+ }}
+```
+
+## Querying
+
+```elixir
+post =
+  %VaxExample.PostWithCrdts{title: "Reading from id"}
+  |> Repo.insert!()
+
+nil = Repo.get(VaxExample.PostWithCrdts, Ecto.UUID.generate())
+%VaxExample.PostWithCrdts{} = Repo.get(VaxExample.PostWithCrdts, post.id)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+%VaxExample.PostWithCrdts{
+  __meta__: #Ecto.Schema.Metadata<:loaded, "post_with_crdts">,
+  content: nil,
+  id: "4929a79b-371a-489c-8f03-c2ddd5c594f7",
+  reactions: 0,
+  tags: #MapSet<[]>,
+  title: "Reading from id"
+}
+```
+
+```elixir
+# Simple querying capabilities
+import Ecto.Query
+
+post_a =
+  %VaxExample.PostWithCrdts{title: "Post A"}
+  |> Repo.insert!()
+
+post_b =
+  %VaxExample.PostWithCrdts{title: "Post B"}
+  |> Repo.insert!()
+
+from(VaxExample.PostWithCrdts)
+|> where([p], p.id in ^[post_a.id, post_b.id])
+|> Repo.all()
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+[
+  %VaxExample.PostWithCrdts{
+    __meta__: #Ecto.Schema.Metadata<:loaded, "post_with_crdts">,
+    content: nil,
+    id: "e1bfc996-0330-4990-b492-7e39992d0946",
+    reactions: 0,
+    tags: #MapSet<[]>,
+    title: "Post A"
+  },
+  %VaxExample.PostWithCrdts{
+    __meta__: #Ecto.Schema.Metadata<:loaded, "post_with_crdts">,
+    content: nil,
+    id: "d5a6655e-7a5c-49a2-8daf-52b5a9bcb7c4",
+    reactions: 0,
+    tags: #MapSet<[]>,
+    title: "Post B"
+  }
+]
+```
