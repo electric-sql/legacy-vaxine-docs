@@ -1,0 +1,509 @@
+<!-- livebook:{"persist_outputs":true} -->
+
+# Vax example
+
+```elixir
+# Installing the dependencies
+:ok =
+  Mix.install([
+    # Kino is used to provide some extra functionality for the livebook
+    {:kino, "~> 0.6"},
+
+    # Vax wasn't yet released on Hex, so we need to depend on it from git
+    {:vax, git: "git@github.com:vaxine-io/vaxine.git", sparse: "apps/vax"},
+
+    # As git dependencies are local, we need to override them. This workaround
+    # is only required until Vax is available on Hex
+    {:antidote_pb_codec,
+     git: "git@github.com:vaxine-io/vaxine.git", sparse: "apps/antidote_pb_codec", override: true},
+    {:antidotec_pb,
+     git: "git@github.com:vaxine-io/vaxine.git", sparse: "apps/antidotec_pb", override: true}
+  ])
+
+# The code below provides a smart cell to this livebook
+defmodule VaxExample.VaxConfig do
+  use Kino.JS
+  use Kino.JS.Live
+  use Kino.SmartCell, name: "Vax config"
+
+  @impl true
+  def init(_attrs, ctx) do
+    {:ok, assign(ctx, hostname: "localhost", port: 8087)}
+  end
+
+  @impl true
+  def handle_connect(ctx) do
+    {:ok, %{hostname: ctx.assigns.hostname, port: ctx.assigns.port}, ctx}
+  end
+
+  @impl true
+  def to_attrs(ctx) do
+    %{"hostname" => ctx.assigns.hostname, "port" => ctx.assigns.port}
+  end
+
+  @impl true
+  def handle_event("set_config", %{"hostname" => hostname, "port" => port}, ctx) do
+    {:noreply, assign(ctx, hostname: hostname, port: String.to_integer(port))}
+  end
+
+  @impl true
+  def to_source(attrs) do
+    quote do
+      :ok =
+        Application.put_env(:vax_example, VaxExample.Repo,
+          hostname: unquote(attrs["hostname"]),
+          port: unquote(attrs["port"]),
+          log: false
+        )
+
+      IO.puts("Set hostname as `#{inspect(unquote(attrs["hostname"]))}`")
+      IO.puts("Set port as `#{unquote(inspect(attrs["port"]))}`")
+    end
+    |> Kino.SmartCell.quoted_to_string()
+  end
+
+  asset "main.js" do
+    """
+    export function init(ctx, payload) {
+      ctx.importCSS("main.css");
+      ctx.importCSS("https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap");
+
+      root.innerHTML = `
+        <div class="app">
+          <label class="label">Hostname:</label>
+          <input class="input" type="text" name="hostname" />
+
+          <label class="label">Port:</label>
+          <input class="input" type="text" name="port" />
+
+          <button class="button" id="set">
+            Set
+          </button>
+        </div>
+      `;
+
+      const buttonEl = ctx.root.querySelector(`[id="set"]`);
+
+      buttonEl.addEventListener("click", (event) => {
+        let hostname = ctx.root.querySelector(`[name="hostname"]`).value;
+        let port = ctx.root.querySelector(`[name="port"]`).value;
+        ctx.pushEvent("set_config", {hostname: hostname, port: port});
+      });
+
+      ctx.handleSync(() => {
+        // Synchronously invokes change listeners
+        document.activeElement &&
+          document.activeElement.dispatchEvent(new Event("change"));
+      });
+    }
+    """
+  end
+
+  asset "main.css" do
+    """
+    .app {
+      font-family: "Inter";
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background-color: #ecf0ff;
+      padding: 8px 16px;
+      border: solid 1px #cad5e0;
+      border-radius: 0.5rem 0.5rem 0 0;
+    }
+
+    .label {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #445668;
+      text-transform: uppercase;
+    }
+
+    .input {
+      padding: 8px 12px;
+      background-color: #f8fafc;
+      font-size: 0.875rem;
+      border: 1px solid #e1e8f0;
+      border-radius: 0.5rem;
+      color: #445668;
+      min-width: 150px;
+    }
+
+    .input:focus {
+      outline: none;
+    }
+
+    .button {
+      appearance: button;
+      backface-visibility: hidden;
+      background-color: #405cf5;
+      border-radius: 6px;
+      border-width: 0;
+      box-shadow: rgba(50, 50, 93, .1) 0 0 0 1px inset,rgba(50, 50, 93, .1) 0 2px 5px 0,rgba(0, 0, 0, .07) 0 1px 1px 0;
+      box-sizing: border-box;
+      color: #fff;
+      cursor: pointer;
+      line-height: 1.15;
+      outline: none;
+      overflow: hidden;
+      padding: 0 25px;
+      position: relative;
+      text-align: center;
+      text-transform: none;
+      transform: translateZ(0);
+      transition: all .2s,box-shadow .08s ease-in;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+      height: 24px;
+    }
+    """
+  end
+end
+
+Kino.SmartCell.register(VaxExample.VaxConfig)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+* Getting vax (git@github.com:vaxine-io/vaxine.git)
+remote: Enumerating objects: 20562, done.        
+remote: Counting objects: 100% (335/335), done.        
+remote: Compressing objects: 100% (171/171), done.        
+remote: Total 20562 (delta 183), reused 240 (delta 154), pack-reused 20227        
+origin/HEAD set to main
+* Getting antidote_pb_codec (git@github.com:vaxine-io/vaxine.git)
+remote: Enumerating objects: 20562, done.        
+remote: Counting objects: 100% (335/335), done.        
+remote: Compressing objects: 100% (171/171), done.        
+remote: Total 20562 (delta 183), reused 240 (delta 154), pack-reused 20227        
+origin/HEAD set to main
+* Getting antidotec_pb (git@github.com:vaxine-io/vaxine.git)
+remote: Enumerating objects: 20562, done.        
+remote: Counting objects: 100% (335/335), done.        
+remote: Compressing objects: 100% (171/171), done.        
+remote: Total 20562 (delta 183), reused 240 (delta 154), pack-reused 20227        
+origin/HEAD set to main
+Resolving Hex dependencies...
+Dependency resolution completed:
+New:
+  decimal 2.0.0
+  ecto 3.8.4
+  kino 0.6.1
+  nimble_pool 0.2.6
+  table 0.1.1
+  telemetry 1.1.0
+* Getting kino (Hex package)
+* Getting ecto (Hex package)
+* Getting nimble_pool (Hex package)
+* Getting decimal (Hex package)
+* Getting telemetry (Hex package)
+* Getting table (Hex package)
+==> decimal
+Compiling 4 files (.ex)
+Generated decimal app
+===> Analyzing applications...
+===> Compiling antidote_pb_codec
+src/antidote_pb_codec.erl:44:2: Warning: type read_result_in() is unused
+
+==> table
+Compiling 3 files (.ex)
+Generated table app
+==> kino
+Compiling 27 files (.ex)
+Generated kino app
+===> Analyzing applications...
+===> Compiling telemetry
+==> ecto
+Compiling 56 files (.ex)
+Generated ecto app
+==> nimble_pool
+Compiling 2 files (.ex)
+Generated nimble_pool app
+===> Fetching rebar3_path_deps v0.4.0
+===> Analyzing applications...
+===> Compiling rebar3_path_deps
+===> Analyzing applications...
+===> Compiling antidotec_pb
+==> vax
+Compiling 15 files (.ex)
+Generated vax app
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+:ok
+```
+
+## Setting our connection parameters
+
+<!-- livebook:{"attrs":{},"kind":"Elixir.VaxExample.VaxConfig","livebook_object":"smart_cell"} -->
+
+```elixir
+:ok =
+  Application.put_env(:vax_example, VaxExample.Repo,
+    hostname: "localhost",
+    port: 8087,
+    log: false
+  )
+
+IO.puts("Set hostname as `#{inspect("localhost")}`")
+IO.puts("Set port as `#{"8087"}`")
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+Set hostname as `"localhost"`
+Set port as `8087`
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+:ok
+```
+
+## Spinning up a Repo
+
+```elixir
+# Defining the repo
+defmodule VaxExample.Repo do
+  use Ecto.Repo, adapter: Vax.Adapter, otp_app: :vax_example
+end
+
+# Starting the repo
+{:ok, _} = Supervisor.start_link([VaxExample.Repo], strategy: :one_for_one)
+
+# Aliasing it for ease of usage
+alias VaxExample.Repo
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+VaxExample.Repo
+```
+
+<!-- livebook:{"branch_parent_index":1} -->
+
+## Creating a Schema
+
+```elixir
+defmodule VaxExample.Post do
+  use Vax.Schema
+
+  schema "post" do
+    field(:title, :string)
+    field(:content, :string)
+  end
+end
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:module, VaxExample.Post, <<70, 79, 82, 49, 0, 0, 15, ...>>,
+ [__schema__: 1, __schema__: 1, __schema__: 1, __schema__: 1, __schema__: 2, __schema__: 2, ...]}
+```
+
+Now that we have a schema, we can insert some data:
+
+```elixir
+{:ok, post} =
+  Repo.insert(%VaxExample.Post{title: "Hello, world!", content: "This field is a LWW register!"})
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:ok,
+ %VaxExample.Post{
+   __meta__: #Ecto.Schema.Metadata<:loaded, "post">,
+   content: "This field is a LWW register!",
+   id: "4b2ccb53-3b24-462f-b733-61440f80caec",
+   title: "Hello, world!"
+ }}
+```
+
+We can update the post
+
+```elixir
+{:ok, post} =
+  post
+  |> Ecto.Changeset.change(%{title: "Hello, universe!"})
+  |> Repo.update()
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:ok,
+ %VaxExample.Post{
+   __meta__: #Ecto.Schema.Metadata<:loaded, "post">,
+   content: "This field is a LWW register!",
+   id: "4b2ccb53-3b24-462f-b733-61440f80caec",
+   title: "Hello, universe!"
+ }}
+```
+
+CRDT types have special update semantics
+
+```elixir
+defmodule VaxExample.Post2 do
+  use Vax.Schema
+
+  schema "post_with_crdts" do
+    field(:title, :string)
+    field(:content, :string)
+    field(:reactions, Vax.Types.Counter)
+    field(:tags, Vax.Types.Set, type: :string)
+  end
+end
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:module, VaxExample.Post2, <<70, 79, 82, 49, 0, 0, 16, ...>>,
+ [__schema__: 1, __schema__: 1, __schema__: 1, __schema__: 1, __schema__: 2, __schema__: 2, ...]}
+```
+
+```elixir
+{:ok, post_base} =
+  %VaxExample.Post2{title: "Concurrency safe counter and set", reactions: 2}
+  |> Repo.insert()
+
+{:ok, %{reactions: 5}} =
+  post_base
+  |> Vax.Types.Counter.cast_increment(:reactions, 3)
+  |> Repo.update()
+
+# updating stale, incs get merged
+{:ok, %{reactions: 8}} =
+  post_base
+  |> Ecto.Changeset.cast(%{reactions: 5}, [:reactions])
+  |> Repo.update()
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:ok,
+ %VaxExample.Post2{
+   __meta__: #Ecto.Schema.Metadata<:loaded, "post_with_crdts">,
+   content: nil,
+   id: "9ff31317-bcca-4766-9cfb-2de19847e9ff",
+   reactions: 8,
+   tags: #MapSet<[]>,
+   title: "Concurrency safe counter and set"
+ }}
+```
+
+```elixir
+{:ok, post_base} =
+  %VaxExample.Post2{title: "Concurrency safe counter and set"}
+  |> Repo.insert()
+
+expected_tags = MapSet.new(["cool"])
+
+{:ok, %{tags: ^expected_tags}} =
+  post_base
+  |> Ecto.Changeset.change(%{tags: ["cool"]})
+  |> Repo.update()
+
+# updating stale, incs get merged
+expected_tags = MapSet.new(["cool", "new"])
+
+{:ok, %{tags: ^expected_tags} = post_updated} =
+  post_base
+  |> Ecto.Changeset.cast(%{tags: ["new"]}, [:tags])
+  |> Repo.update()
+
+expected_tags = MapSet.new(["cool"])
+
+{:ok, %{tags: ^expected_tags}} =
+  post_updated
+  |> Ecto.Changeset.cast(%{tags: ["cool"]}, [:tags])
+  |> Repo.update()
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:ok,
+ %VaxExample.Post2{
+   __meta__: #Ecto.Schema.Metadata<:loaded, "post_with_crdts">,
+   content: nil,
+   id: "b04f1d70-95ea-4469-ba2b-4b0b1df2446a",
+   reactions: 0,
+   tags: #MapSet<["cool"]>,
+   title: "Concurrency safe counter and set"
+ }}
+```
+
+## Querying
+
+```elixir
+post =
+  %VaxExample.Post2{title: "Reading from id"}
+  |> Repo.insert!()
+
+nil = Repo.get(VaxExample.Post2, Ecto.UUID.generate())
+%VaxExample.Post2{} = Repo.get(VaxExample.Post2, post.id)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+%VaxExample.Post2{
+  __meta__: #Ecto.Schema.Metadata<:loaded, "post_with_crdts">,
+  content: nil,
+  id: "4ab5bc7e-62ff-4500-b4cf-02aa448442d4",
+  reactions: 0,
+  tags: #MapSet<[]>,
+  title: "Reading from id"
+}
+```
+
+```elixir
+# Simple querying capabilities
+import Ecto.Query
+
+post_a =
+  %VaxExample.Post2{title: "Post A"}
+  |> Repo.insert!()
+
+post_b =
+  %VaxExample.Post2{title: "Post B"}
+  |> Repo.insert!()
+
+from(VaxExample.Post2)
+|> where([p], p.id in ^[post_a.id, post_b.id])
+|> Repo.all()
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+[
+  %VaxExample.Post2{
+    __meta__: #Ecto.Schema.Metadata<:loaded, "post_with_crdts">,
+    content: nil,
+    id: "e1bfc996-0330-4990-b492-7e39992d0946",
+    reactions: 0,
+    tags: #MapSet<[]>,
+    title: "Post A"
+  },
+  %VaxExample.Post2{
+    __meta__: #Ecto.Schema.Metadata<:loaded, "post_with_crdts">,
+    content: nil,
+    id: "d5a6655e-7a5c-49a2-8daf-52b5a9bcb7c4",
+    reactions: 0,
+    tags: #MapSet<[]>,
+    title: "Post B"
+  }
+]
+```
