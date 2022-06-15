@@ -3,16 +3,24 @@
 # Vax example
 
 ```elixir
+# Installing the dependencies
 :ok =
   Mix.install([
+    # Kino is used to provide some extra functionality for the livebook
+    {:kino, "~> 0.6"},
+
+    # Vax wasn't yet released on Hex, so we need to depend on it from git
+    {:vax, git: "git@github.com:vaxine-io/vaxine.git", sparse: "apps/vax"},
+
+    # As git dependencies are local, we need to override them. This workaround
+    # is only required until Vax is available on Hex
     {:antidote_pb_codec,
      git: "git@github.com:vaxine-io/vaxine.git", sparse: "apps/antidote_pb_codec", override: true},
     {:antidotec_pb,
-     git: "git@github.com:vaxine-io/vaxine.git", sparse: "apps/antidotec_pb", override: true},
-    {:vax, git: "git@github.com:vaxine-io/vaxine.git", sparse: "apps/vax"},
-    {:kino, "~> 0.6.0"}
+     git: "git@github.com:vaxine-io/vaxine.git", sparse: "apps/antidotec_pb", override: true}
   ])
 
+# The code below provides a smart cell to this livebook
 defmodule VaxExample.VaxConfig do
   use Kino.JS
   use Kino.JS.Live
@@ -159,6 +167,73 @@ Kino.SmartCell.register(VaxExample.VaxConfig)
 <!-- livebook:{"output":true} -->
 
 ```
+* Getting vax (git@github.com:vaxine-io/vaxine.git)
+remote: Enumerating objects: 20562, done.        
+remote: Counting objects: 100% (335/335), done.        
+remote: Compressing objects: 100% (171/171), done.        
+remote: Total 20562 (delta 183), reused 240 (delta 154), pack-reused 20227        
+origin/HEAD set to main
+* Getting antidote_pb_codec (git@github.com:vaxine-io/vaxine.git)
+remote: Enumerating objects: 20562, done.        
+remote: Counting objects: 100% (335/335), done.        
+remote: Compressing objects: 100% (171/171), done.        
+remote: Total 20562 (delta 183), reused 240 (delta 154), pack-reused 20227        
+origin/HEAD set to main
+* Getting antidotec_pb (git@github.com:vaxine-io/vaxine.git)
+remote: Enumerating objects: 20562, done.        
+remote: Counting objects: 100% (335/335), done.        
+remote: Compressing objects: 100% (171/171), done.        
+remote: Total 20562 (delta 183), reused 240 (delta 154), pack-reused 20227        
+origin/HEAD set to main
+Resolving Hex dependencies...
+Dependency resolution completed:
+New:
+  decimal 2.0.0
+  ecto 3.8.4
+  kino 0.6.1
+  nimble_pool 0.2.6
+  table 0.1.1
+  telemetry 1.1.0
+* Getting kino (Hex package)
+* Getting ecto (Hex package)
+* Getting nimble_pool (Hex package)
+* Getting decimal (Hex package)
+* Getting telemetry (Hex package)
+* Getting table (Hex package)
+==> decimal
+Compiling 4 files (.ex)
+Generated decimal app
+===> Analyzing applications...
+===> Compiling antidote_pb_codec
+src/antidote_pb_codec.erl:44:2: Warning: type read_result_in() is unused
+
+==> table
+Compiling 3 files (.ex)
+Generated table app
+==> kino
+Compiling 27 files (.ex)
+Generated kino app
+===> Analyzing applications...
+===> Compiling telemetry
+==> ecto
+Compiling 56 files (.ex)
+Generated ecto app
+==> nimble_pool
+Compiling 2 files (.ex)
+Generated nimble_pool app
+===> Fetching rebar3_path_deps v0.4.0
+===> Analyzing applications...
+===> Compiling rebar3_path_deps
+===> Analyzing applications...
+===> Compiling antidotec_pb
+==> vax
+Compiling 15 files (.ex)
+Generated vax app
+```
+
+<!-- livebook:{"output":true} -->
+
+```
 :ok
 ```
 
@@ -248,8 +323,8 @@ Now that we have a schema, we can insert some data:
  %VaxExample.Post{
    __meta__: #Ecto.Schema.Metadata<:loaded, "post">,
    content: "This field is a LWW register!",
-   id: "d19614f1-2fcf-4265-948c-b34c3d491681",
-   title: "Hello world!"
+   id: "4b2ccb53-3b24-462f-b733-61440f80caec",
+   title: "Hello, world!"
  }}
 ```
 
@@ -269,25 +344,15 @@ We can update the post
  %VaxExample.Post{
    __meta__: #Ecto.Schema.Metadata<:loaded, "post">,
    content: "This field is a LWW register!",
-   id: "d19614f1-2fcf-4265-948c-b34c3d491681",
+   id: "4b2ccb53-3b24-462f-b733-61440f80caec",
    title: "Hello, universe!"
  }}
-```
-
-```elixir
-
-```
-
-<!-- livebook:{"output":true} -->
-
-```
-nil
 ```
 
 CRDT types have special update semantics
 
 ```elixir
-defmodule VaxExample.PostWithCrdts do
+defmodule VaxExample.Post2 do
   use Vax.Schema
 
   schema "post_with_crdts" do
@@ -302,13 +367,13 @@ end
 <!-- livebook:{"output":true} -->
 
 ```
-{:module, VaxExample.PostWithCrdts, <<70, 79, 82, 49, 0, 0, 16, ...>>,
+{:module, VaxExample.Post2, <<70, 79, 82, 49, 0, 0, 16, ...>>,
  [__schema__: 1, __schema__: 1, __schema__: 1, __schema__: 1, __schema__: 2, __schema__: 2, ...]}
 ```
 
 ```elixir
 {:ok, post_base} =
-  %VaxExample.PostWithCrdts{title: "Concurrency safe counter and set", reactions: 2}
+  %VaxExample.Post2{title: "Concurrency safe counter and set", reactions: 2}
   |> Repo.insert()
 
 {:ok, %{reactions: 5}} =
@@ -327,10 +392,10 @@ end
 
 ```
 {:ok,
- %VaxExample.PostWithCrdts{
+ %VaxExample.Post2{
    __meta__: #Ecto.Schema.Metadata<:loaded, "post_with_crdts">,
    content: nil,
-   id: "9f36d962-242f-4334-961e-7e9eb2e52389",
+   id: "9ff31317-bcca-4766-9cfb-2de19847e9ff",
    reactions: 8,
    tags: #MapSet<[]>,
    title: "Concurrency safe counter and set"
@@ -339,7 +404,7 @@ end
 
 ```elixir
 {:ok, post_base} =
-  %VaxExample.PostWithCrdts{title: "Concurrency safe counter and set"}
+  %VaxExample.Post2{title: "Concurrency safe counter and set"}
   |> Repo.insert()
 
 expected_tags = MapSet.new(["cool"])
@@ -369,10 +434,10 @@ expected_tags = MapSet.new(["cool"])
 
 ```
 {:ok,
- %VaxExample.PostWithCrdts{
+ %VaxExample.Post2{
    __meta__: #Ecto.Schema.Metadata<:loaded, "post_with_crdts">,
    content: nil,
-   id: "3567736d-ea8a-48a3-a38a-0ca81bfc6c14",
+   id: "b04f1d70-95ea-4469-ba2b-4b0b1df2446a",
    reactions: 0,
    tags: #MapSet<["cool"]>,
    title: "Concurrency safe counter and set"
@@ -383,20 +448,20 @@ expected_tags = MapSet.new(["cool"])
 
 ```elixir
 post =
-  %VaxExample.PostWithCrdts{title: "Reading from id"}
+  %VaxExample.Post2{title: "Reading from id"}
   |> Repo.insert!()
 
-nil = Repo.get(VaxExample.PostWithCrdts, Ecto.UUID.generate())
-%VaxExample.PostWithCrdts{} = Repo.get(VaxExample.PostWithCrdts, post.id)
+nil = Repo.get(VaxExample.Post2, Ecto.UUID.generate())
+%VaxExample.Post2{} = Repo.get(VaxExample.Post2, post.id)
 ```
 
 <!-- livebook:{"output":true} -->
 
 ```
-%VaxExample.PostWithCrdts{
+%VaxExample.Post2{
   __meta__: #Ecto.Schema.Metadata<:loaded, "post_with_crdts">,
   content: nil,
-  id: "4929a79b-371a-489c-8f03-c2ddd5c594f7",
+  id: "4ab5bc7e-62ff-4500-b4cf-02aa448442d4",
   reactions: 0,
   tags: #MapSet<[]>,
   title: "Reading from id"
@@ -408,14 +473,14 @@ nil = Repo.get(VaxExample.PostWithCrdts, Ecto.UUID.generate())
 import Ecto.Query
 
 post_a =
-  %VaxExample.PostWithCrdts{title: "Post A"}
+  %VaxExample.Post2{title: "Post A"}
   |> Repo.insert!()
 
 post_b =
-  %VaxExample.PostWithCrdts{title: "Post B"}
+  %VaxExample.Post2{title: "Post B"}
   |> Repo.insert!()
 
-from(VaxExample.PostWithCrdts)
+from(VaxExample.Post2)
 |> where([p], p.id in ^[post_a.id, post_b.id])
 |> Repo.all()
 ```
@@ -424,7 +489,7 @@ from(VaxExample.PostWithCrdts)
 
 ```
 [
-  %VaxExample.PostWithCrdts{
+  %VaxExample.Post2{
     __meta__: #Ecto.Schema.Metadata<:loaded, "post_with_crdts">,
     content: nil,
     id: "e1bfc996-0330-4990-b492-7e39992d0946",
@@ -432,7 +497,7 @@ from(VaxExample.PostWithCrdts)
     tags: #MapSet<[]>,
     title: "Post A"
   },
-  %VaxExample.PostWithCrdts{
+  %VaxExample.Post2{
     __meta__: #Ecto.Schema.Metadata<:loaded, "post_with_crdts">,
     content: nil,
     id: "d5a6655e-7a5c-49a2-8daf-52b5a9bcb7c4",
